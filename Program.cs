@@ -5,6 +5,9 @@ using SimpleWebApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
+builder.Services.AddRazorPages();
+
 builder.Services.AddAuthentication("BasicAuthentication")
             .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
 
@@ -56,6 +59,7 @@ app.UseAuthentication(); // This will enable authentication
 app.UseAuthorization();  // This will enable authorization based on authentication
 
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();
 
