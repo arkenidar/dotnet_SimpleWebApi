@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SimpleWebApi.Data;
 using SimpleWebApi.Models;
 using System.Collections.Generic;
@@ -18,8 +19,11 @@ namespace SimpleWebApi.Controllers
             _context = context;
         }
 
+
+
         // GET: api/items
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Item>>> GetItems()
         {
             return await Task.FromResult(_context.Items.ToList());
