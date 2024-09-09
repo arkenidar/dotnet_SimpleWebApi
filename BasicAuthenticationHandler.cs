@@ -7,31 +7,23 @@ using System.Text.Encodings.Web;
 
 namespace SimpleWebApi
 {
-    public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-    {
-        public BasicAuthenticationHandler(
+    public class BasicAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-#pragma warning disable CS0618 // Il tipo o il membro è obsoleto
-            ISystemClock clock)
-#pragma warning restore CS0618 // Il tipo o il membro è obsoleto
-#pragma warning disable CS0618 // Il tipo o il membro è obsoleto
-            : base(options, logger, encoder, clock)
-#pragma warning restore CS0618 // Il tipo o il membro è obsoleto
-        {
-        }
+            UrlEncoder encoder) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    {
 
-        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Check if the Authorization header exists
             if (!Request.Headers.ContainsKey("Authorization"))
-                return AuthenticateResult.Fail("Missing Authorization Header");
-
+                return Task.FromResult(AuthenticateResult.Fail("Missing Authorization Header"));
             try
             {
                 // Parse the Authorization header
-                var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+                var presentHeader = Request.Headers.Authorization;
+                var authHeader = AuthenticationHeaderValue.Parse(presentHeader.ToString());
+                if (authHeader == null || authHeader.Parameter == null) throw new Exception("Invalid Authorization Header");
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
                 var credentials = Encoding.UTF8.GetString(credentialBytes).Split(':');
                 var username = credentials[0];
@@ -39,26 +31,25 @@ namespace SimpleWebApi
 
                 // Validate credentials (replace with actual validation logic)
                 if (username != "testuser" || password != "testpassword")
-                    return AuthenticateResult.Fail("Invalid Username or Password");
+                    return Task.FromResult(AuthenticateResult.Fail("Invalid Username or Password"));
 
                 // Create claims and identity for the authenticated user
                 var claims = new[] {
-            new Claim(ClaimTypes.NameIdentifier, username),
-            new Claim(ClaimTypes.Name, username),
-        };
+                                    new Claim(ClaimTypes.NameIdentifier, username),
+                                    new Claim(ClaimTypes.Name, username),
+                                };
                 var identity = new ClaimsIdentity(claims, Scheme.Name);
                 var principal = new ClaimsPrincipal(identity);
                 var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
                 // Return success with the authentication ticket
-                return AuthenticateResult.Success(ticket);
+                return Task.FromResult(AuthenticateResult.Success(ticket));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Handle exceptions (e.g., malformed header, etc.)
-                return AuthenticateResult.Fail("Invalid Authorization Header");
+                return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization Header"));
             }
         }
-
     }
 }
