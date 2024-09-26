@@ -23,7 +23,7 @@ namespace SimpleWebApi.Controllers
 
         // GET: api/items
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<IEnumerable<Item>>> GetItems()
         {
             return await Task.FromResult(_context.Items.ToList());
